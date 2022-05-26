@@ -1,5 +1,4 @@
 # coding=utf-8
-from turtle import up
 from mpi4py import MPI
 import numpy as np
 import time
