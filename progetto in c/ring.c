@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
-//#include<mpi.h> 
+#include<mpi.h> 
 #include<time.h>
 
 int find_max(int* arr, int dim){
@@ -16,7 +16,6 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
-    int nmax = 100000000;
 
 // 1) topologia ring:
     MPI_Init(&argc , &argv);
@@ -30,26 +29,44 @@ int main(int argc, char **argv){
     int rank;
     MPI_Comm_rank(ring, &rank);     
     int coords[1];
-    MPI_Cart_coords(ring, rank , 2, coords); 
-    printf("\nIn ring topology, Processor %d has coordinates %d", rank, coords[0]);
+    MPI_Cart_coords(ring, rank , 1, coords); 
+    //printf("\nIn ring topology, Processor %d has coordinates %d", rank, coords[0]);
 
     // left, right = ring.Shift(0, 1)
-    int numbers[16];
+
+    int* numbers; 
 
     if(rank == 0){
-        //numbers = np.random.randint(nmax, size=dim)
+        numbers = (int*)malloc(sizeof(int)*dim);
+        for(int i = 0; i<dim; i++){
+            numbers[i] = i; //drand48()*dim;
+        }
         //DEBUG:
         //numbers = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
         //numbers = np.array_split(numbers, size)
-        for(int i = 0; i<16; i++){
-            numbers[i] = i;
-        }  
+        //for(int i = 0; i<16; i++){
+        //    numbers[i] = i;
+        //}  
+    }
 
     double start = MPI_Wtime();
 
     int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
-    MPI_Scatter(numbers, dim/size, MPI_INT, local_numbers, dim/size, MPI_INT , 0, ring);
-
+    // Compute displacement in case of n%size != 0
+    //  ->  We're spreading the remainder to all processors until the remainder is gone
+    int remainder = dim % size;
+    int size_local[size], displ[size];
+    int sum = 0;
+    for (int i = 0; i < size; i++) {
+        size_local[i] = dim / size;
+        if (remainder > 0) {
+            size_local[i]++;
+            remainder--;
+        }
+        displ[i] = sum;
+        sum += size_local[i];
+    }
+    MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     int local_max = find_max(local_numbers, dim/size);
     int max_right = 0;
     // all the odd numbers send to the left and right neighborhood

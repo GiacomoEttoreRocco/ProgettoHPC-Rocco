@@ -16,8 +16,6 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
-    int nmax = 100000000;
-
 // 2) topologia mesh: 
     MPI_Init(&argc , &argv);
     int size;
@@ -31,32 +29,48 @@ int main(int argc, char **argv){
     MPI_Comm_rank(mesh, &rank);  
     int coords[2];
     MPI_Cart_coords(mesh, rank , 2, coords); 
-    printf("\nIn mesh topology, Processor %d has coordinates %d,%d", rank, coords[0], coords[1]);
+    //printf("\nIn mesh topology, Processor %d has coordinates %d,%d", rank, coords[0], coords[1]);
 
-
-int numbers[16];
+int *numbers;
 
 if(rank == 0){
-    //int *numbers = (int*)malloc(sizeof(int)*dim) // np.random.randint(nmax, size=dim)
-    //DEBUG:
-    for(int i = 0; i<16; i++){
+    numbers = (int*)malloc(sizeof(int)*dim);
+    for(int i = 0; i<dim; i++){
+        //numbers[i] = drand48()*dim;
         numbers[i] = i;
     }
-    //---------------------
-    //numbers = np.array_split(numbers, size)
 }
 
 //t0 = time.time()
 double start = MPI_Wtime();
 
-int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
-MPI_Scatter(numbers, dim/size, MPI_INT, local_numbers, dim/size, MPI_INT , 0, mesh);
+int *local_numbers; //= (int*)malloc(sizeof(int)*dim/size);
 
-int local_max = find_max(local_numbers, dim/size);
+int remainder = dim % size;
+    int size_local[size], displ[size];
+    int sum = 0;
+    for (int i = 0; i < size; i++) {
+        size_local[i] = dim / size;
+        if (remainder > 0) {
+            size_local[i]++;
+            remainder--;
+        }
+        displ[i] = sum;
+        sum += size_local[i];
+    }
+//MPI_Scatter(numbers, dim/size, MPI_INT, local_numbers, dim/size, MPI_INT , 0, mesh);
+local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
+
+MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
+
+for(int i = 0; i < size_local[rank]; i++){
+    printf("%d , ",local_numbers[i]);
+}
+
+int local_max = find_max(local_numbers, size_local[rank]);
 
 int max_down = 0;
 int max_right = 0;
-
 
 //coords = mesh.Get_coords(rank)
 int x = ceil(log2(dims[0])+1);
