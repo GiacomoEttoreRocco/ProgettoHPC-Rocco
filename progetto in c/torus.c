@@ -135,7 +135,7 @@ if(rank < dims[2]){
         MPI_Cart_shift(torus , 2, pow(2,(liv-1)), &shallow, &deep);
         int temp = pow(2,liv);
         if(rank % temp != 0){
-            printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
+            //printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
             MPI_Send(&local_max , 1, MPI_INT , shallow, rank , torus);
             break;
         }
