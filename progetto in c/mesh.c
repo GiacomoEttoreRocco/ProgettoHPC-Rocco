@@ -58,14 +58,13 @@ int remainder = dim % size;
         displ[i] = sum;
         sum += size_local[i];
     }
-//MPI_Scatter(numbers, dim/size, MPI_INT, local_numbers, dim/size, MPI_INT , 0, mesh);
 local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 
 MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
 
-for(int i = 0; i < size_local[rank]; i++){
-    printf("%d , ",local_numbers[i]);
-}
+//for(int i = 0; i < size_local[rank]; i++){
+//    printf("%d , ",local_numbers[i]);
+//}
 
 int local_max = find_max(local_numbers, size_local[rank]);
 
@@ -78,11 +77,9 @@ int up, down;
 
 for(int i=1; i < x; i++){
     MPI_Cart_shift(mesh , 0, pow(2,(i-1)), &up, &down);
-    //up, down = mesh.Shift(0, 2**(i-1))
-    // print(" Sono il processore", rank, ": ", mesh.Get_coords(rank), "up: ", up, ": ",mesh.Get_coords(up), "down: ", down, ": ", mesh.Get_coords(down), "livello: ", i)
     int y = pow(2,i);
     if (coords[0] % y != 0){
-        // print("Processore", rank, ".   Invio a ", up, " e mi tolgo, livello: ", i)
+        printf("Processore %d, invio a %d, e mi tolgo, (up) livello: %d\n\n", rank, up, i);
         MPI_Send(&local_max , 1, MPI_INT , up , rank , mesh);
         break;
     }else{
@@ -91,7 +88,7 @@ for(int i=1; i < x; i++){
             //print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
             MPI_Recv(&max_down, 1, MPI_INT, down, down, mesh, MPI_STATUS_IGNORE);
             //max_down = mesh.recv(source = down, tag = down)     #   recive from any max_down
-            //print(" Sono il processore ", rank, "il mio down e' ", mesh.Get_coords(down), " messaggio ricevuto.  livello: ", i) 
+            //printf(" I am processor ", rank, "il mio down e' ", mesh.Get_coords(down), " messaggio ricevuto.  livello: ", i) 
             if(max_down > local_max){
                 local_max = max_down;
             }
@@ -101,26 +98,30 @@ for(int i=1; i < x; i++){
 
 MPI_Barrier(mesh);
 int left, right;
-
-for(int liv = 1; liv < dims[1]; liv++){
-    //left, right = mesh.Shift(1, 2**(liv-1))
-    MPI_Cart_shift(mesh , 1, pow(2,(liv-1)), &left, &right);
-    int temp = pow(2,liv);
-    if((rank % temp) != 0){
-        //mesh.send(local_max, dest = left, tag = rank) 
-        MPI_Send(&local_max , 1, MPI_INT , left , rank , mesh);
-        break;
-    }
-    else{
-        int p = pow(2,(liv-1));
-        if(rank + p < dims[1]){
-            //max_right = mesh.recv(source = right, tag = right)
-            MPI_Recv(&max_right, 1, MPI_INT, right, right, mesh, MPI_STATUS_IGNORE);
-            //print(" Sono il processore ", rank, "il mio right e' ", mesh.Get_coords(right), " messaggio ricevuto.  livello: ", liv) 
-            if(max_right > local_max){
-                local_max = max_right;
-            }
-        }     
+//printf("DIMS 1: %d\n\n", dims[1]);
+if(rank < dims[1]){
+    for(int liv = 1; liv < dims[1]; liv++){
+        //left, right = mesh.Shift(1, 2**(liv-1))
+        MPI_Cart_shift(mesh , 1, pow(2,(liv-1)), &left, &right);
+        int temp = pow(2,liv);
+        if(rank % temp != 0){
+            //mesh.send(local_max, dest = left, tag = rank) 
+            printf("Processore %d, invio a %d, e mi tolgo, livello: (left) %d\n\n", rank, left, liv);
+            MPI_Send(&local_max , 1, MPI_INT , left , rank , mesh);
+            //printf("Send %d, I'm rank: %d\n", local_max, rank); 
+            break;
+        }
+        else{
+            int p = pow(2,(liv-1));
+            if(rank + p < dims[1]){
+                //max_right = mesh.recv(source = right, tag = right)
+                MPI_Recv(&max_right, 1, MPI_INT, right, right, mesh, MPI_STATUS_IGNORE);
+                //printf("Rank: %d\n", rank); 
+                if(max_right > local_max){
+                    local_max = max_right;
+                }
+            }     
+        }
     }
 }
 

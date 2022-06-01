@@ -65,87 +65,91 @@ MPI_Scatterv(numbers, size_local, displ, MPI_INT, local_numbers, size_local[rank
 int local_max = find_max(local_numbers, size_local[rank]);
 
 //for(int i = 0; i< size_local[rank]; i++){
-//    printf("%d, ", local_numbers[i]);
+//    printf("%d", local_numbers[i]);
 //}
-//------------------------------------------------
 
-int max_down = 0;
+//printf("Processore %d, (%d,%d,%d) \n", rank, coords[0], coords[1], coords[2]);
 
-//coords = torus.Get_coords(rank)
-int up, down;
-for(int i=1; i<ceil(log2(dims[1])+1); i++){
-    //up, down = torus.Shift(1, 2**(i-1))
-    MPI_Cart_shift(torus , 0, pow(2,(i-1)), &up, &down);
-    //print(" Sono il processore", rank, ": ", torus.Get_coords(rank), "up: ", up, ": ", torus.Get_coords(up), "down: ", down, ": ", torus.Get_coords(down), "livello: ", i)
-    if(coords[1] %(int) (pow(2,i)) != 0){
-        //print("Processore", rank, ".   Invio a ", up, " e mi tolgo, livello: ", i)
-        //torus.send(local_max, dest = up, tag = rank)   #   send to left local_max
-        MPI_Send(&local_max, 1, MPI_INT , up , rank , torus);
+int up, down, max_down;
+
+int x1 = ceil(log2(dims[0])+1);
+
+for(int i =1; i<x1; i++){
+    MPI_Cart_shift(torus, 0, pow(2,(i-1)), &up, &down);
+    int y = pow(2,i);
+    if ((coords[0]% y) != 0){
+        //printf("FASE UP-DOWN:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, up, i);
+        MPI_Send(&local_max , 1, MPI_INT , up , rank , torus);
         break;
-    }
-    else{
-        //if((down != 0) or (rank == 0)):  
-        //if(rank + 2**(i-1) < grid2d[0]):
-        if(coords[1] + (int)(pow(2,(i-1)) < dims[1])){
-            //print("Processore ", rank," riceverei da down: ", down, " il mio up: ", up, ", livello: ", i)
-            //max_down = torus.recv(source = down, tag = down)     //   recive from any max_down
+    }else{
+        int k = pow(2, i-1);
+        if((coords[0] + k) < dims[0]){
+            //print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
+            //max_right = ring.recv(source = right, tag = right)     #   recive from any max_right
             MPI_Recv(&max_down, 1, MPI_INT, down, down, torus, MPI_STATUS_IGNORE);
-            //print(" Sono il processore ", rank, "il mio down e' ", mesh.Get_coords(down), " messaggio ricevuto.  livello: ", i) 
-            if(max_down > local_max){
+            //printf("Processore %d, ricevuto %d", rank, max_down);
+            if (max_down > local_max){
                 local_max = max_down;
+                }
             }
         }
-    }       
 }
-    
+
+//if(rank == 0 || rank == 1){
+//    printf("LOCAL MAX: %d\n", local_max);
+//}
+
+MPI_Barrier(torus);
+//----------------------------------------------------
+
+int x = ceil(log2(dims[1])+1);
+
+int left, right, max_right;
+
+if(rank < dims[1]*dims[2]){
+    for(int i=1; i < x; i++){
+        MPI_Cart_shift(torus , 1, pow(2,(i-1)), &left, &right);
+        int y = pow(2,i);
+        if (coords[1] % y != 0){
+            //printf("FASE LEFT-RIGHT:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, left, i);
+            MPI_Send(&local_max , 1, MPI_INT , left , rank , torus);
+            break;
+        }else{
+            int k = pow(2, i-1);
+            if(coords[1] + k < dims[1]){
+                MPI_Recv(&max_right, 1, MPI_INT, right, right, torus, MPI_STATUS_IGNORE);
+                if(max_right > local_max){
+                    local_max = max_right;
+                }
+            }
+        }
+    }
+}
+
 MPI_Barrier(torus);
 
-//int max_right = 0 # <- debug
-int left, right;
-for(int liv=1; liv < dims[2]; liv++){
-    //left, right = torus.Shift(2, 2**(liv-1))
-    MPI_Cart_shift(torus , 0, pow(2,(liv-1)), &left, &right);
-    //print(" Sono il processore", rank, ": ", torus.Get_coords(rank), "left: ", left, ": ", torus.Get_coords(left), "right: ", right, ": ", torus.Get_coords(right), "livello: ", i)
-    if(rank % (int)pow(2,liv)) != 0:
-        #print("sending, local_max:",local_max, ",          from.. ",rank, coords, "to..", left, torus.Get_coords(left))
-        torus.send(local_max, dest = left, tag = rank) 
-        break
+int shallow, deep, max_deep;
 
-    else:
-        #if((down != 0) or (rank == 0)):  
-        #if(rank + 2**(i-1) < grid2d[0]):
-        if(coords[2] + 2**(liv-1) < grid3d[2]):
-            #print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
-            max_right = torus.recv(source = right, tag = right)     #   recive from any max_down
-            #print("Sono il processore ", rank, "il mio right e' ", torus.Get_coords(right), " messaggio ricevuto. Livello: ", liv) 
-            if max_right > local_max:
-                local_max = max_right
+if(rank < dims[2]){
+    for(int liv = 1; liv < dims[2]; liv++){
+        MPI_Cart_shift(torus , 2, pow(2,(liv-1)), &shallow, &deep);
+        int temp = pow(2,liv);
+        if(rank % temp != 0){
+            printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
+            MPI_Send(&local_max , 1, MPI_INT , shallow, rank , torus);
+            break;
+        }
+        else{
+            int p = pow(2,(liv-1));
+            if(rank + p < dims[2]){
+                MPI_Recv(&max_deep, 1, MPI_INT, deep, deep, torus, MPI_STATUS_IGNORE);
+                if(max_deep > local_max){
+                    local_max = max_deep;
+                }
+            }     
+        }
+    }
 }
-    
-
-torus.Barrier()
-
-if (coords[1] == 0) & (coords[2] == 0):
-    for liv in range(1, grid3d[0]):
-        shallow, deep = torus.Shift(0, 2**(liv-1))
-        #print(" Sono il processore", rank, ": ", torus.Get_coords(rank), "shallow: ", shallow, ": ", torus.Get_coords(shallow), "deep: ", deep, ": ", torus.Get_coords(deep), "livello: ", i)
-        if coords[0] % (2**liv) != 0:
-            #print("sending, local_max:",local_max, ",          from.. ",rank, coords, "to..", shallow, torus.Get_coords(shallow))
-            torus.send(local_max, dest = shallow, tag = rank) 
-            break
-
-        else:
-            #if((down != 0) or (rank == 0)):  
-            #if(rank + 2**(i-1) < grid2d[0]):
-            if(coords[0] + 2**(liv-1) < grid3d[0]):
-                #print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
-                max_deep = torus.recv(source = deep, tag = deep)     #   recive from any max_down
-                #print("Sono il processore ", rank, "il mio right e' ", torus.Get_coords(right), " messaggio ricevuto. Livello: ", liv) 
-                if max_deep > local_max:
-                    local_max = max_deep
-
-
-
 
 double end = MPI_Wtime();
     if(rank == 0){

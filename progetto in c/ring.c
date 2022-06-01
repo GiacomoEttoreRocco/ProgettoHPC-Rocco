@@ -41,12 +41,6 @@ int main(int argc, char **argv){
         for(int i = 0; i<dim; i++){
             numbers[i] = i; //drand48()*dim;
         }
-        //DEBUG:
-        //numbers = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
-        //numbers = np.array_split(numbers, size)
-        //for(int i = 0; i<16; i++){
-        //    numbers[i] = i;
-        //}  
     }
 
     double start = MPI_Wtime();
