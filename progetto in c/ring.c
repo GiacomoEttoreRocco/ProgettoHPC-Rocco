@@ -4,6 +4,8 @@
 #include<mpi.h> 
 #include<time.h>
 
+const int NUMBER_OF_REPS = 1;
+
 int find_max(int* arr, int dim){
     int max = arr[0];
     for(int i = 1; i < dim; i++){
@@ -43,7 +45,14 @@ int main(int argc, char **argv){
         }
     }
 
-    double start = MPI_Wtime();
+int local_max;
+double start, end, sum_time, mean_time;
+int max_right;
+
+//t0 = time.time()
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//#############     INIZIO CALCOLO TEMPO     ###############
+    start = MPI_Wtime();
 
     int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
     // Compute displacement in case of n%size != 0
@@ -61,36 +70,37 @@ int main(int argc, char **argv){
         sum += size_local[i];
     }
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
-    int local_max = find_max(local_numbers, dim/size);
-    int max_right = 0;
+    local_max = find_max(local_numbers, dim/size);
+    //max_right;
     // all the odd numbers send to the left and right neighborhood
 
     int x = ceil(log2(size)+1);
     int left, right;
     for(int i =1; i<x; i++){
         MPI_Cart_shift(ring, 0, pow(2,(i-1)), &left, &right);
-        //printf(" Sono il processore ", rank, "sx: ", left, "dx: ", right)
         int y = pow(2,i);
         if ((rank % y) != 0){
-            //print("Processore", rank, ".   Invio a ", left, " e mi tolgo, livello: ", i)
-            //ring.send(local_max, dest = left, tag = rank)   #   send to left local_max
             MPI_Send(&local_max , 1, MPI_INT , left , rank , ring);
             break;
         }else{
             int k = pow(2, i-1);
             if(rank + k < size){
-                //print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
-                //max_right = ring.recv(source = right, tag = right)     #   recive from any max_right
                 MPI_Recv(&max_right, 1, MPI_INT, right, right, ring, MPI_STATUS_IGNORE);
-                //print(" Sono il processore ", rank, "il mio destro e' ", right, " messaggio ricevuto.  livello: ", i) 
                 if (max_right > local_max){
+                    //printf("%d", local_max);
                     local_max = max_right;
                     }
                 }
             }
     }
     
-    double end = MPI_Wtime();
+    end = MPI_Wtime();
+//#############     FINE CALCOLO TEMPO     ###############
+    sum_time += end-start;
+    printf("-");
+}
+mean_time = sum_time/NUMBER_OF_REPS;
+
 
     if(rank == 0){
         printf("\n%d",local_max);

@@ -4,6 +4,8 @@
 #include<mpi.h> 
 #include<time.h>
 
+const int NUMBER_OF_REPS = 1;
+
 int find_max(int* arr, int dim){
     int max = arr[0];
     for(int i = 1; i < dim; i++){
@@ -41,91 +43,89 @@ if(rank == 0){
     }
 }
 
-//t0 = time.time()
-double start = MPI_Wtime();
+int local_max;
+double start, end, sum_time, mean_time;
+int max_down;
+int max_right;
 
-int *local_numbers; //= (int*)malloc(sizeof(int)*dim/size);
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//#############     INIZIO CALCOLO TEMPO     ###############
+    start = MPI_Wtime();
 
-int remainder = dim % size;
-    int size_local[size], displ[size];
-    int sum = 0;
-    for (int i = 0; i < size; i++) {
-        size_local[i] = dim / size;
-        if (remainder > 0) {
-            size_local[i]++;
-            remainder--;
+    int *local_numbers; //= (int*)malloc(sizeof(int)*dim/size);
+
+    int remainder = dim % size;
+        int size_local[size], displ[size];
+        int sum = 0;
+        for (int i = 0; i < size; i++) {
+            size_local[i] = dim / size;
+            if (remainder > 0) {
+                size_local[i]++;
+                remainder--;
+            }
+            displ[i] = sum;
+            sum += size_local[i];
         }
-        displ[i] = sum;
-        sum += size_local[i];
-    }
-local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
+    local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 
-MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
+    MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
 
-//for(int i = 0; i < size_local[rank]; i++){
-//    printf("%d , ",local_numbers[i]);
-//}
+    //for(int i = 0; i < size_local[rank]; i++){
+    //    printf("%d , ",local_numbers[i]);
+    //}
 
-int local_max = find_max(local_numbers, size_local[rank]);
+    local_max = find_max(local_numbers, size_local[rank]);
 
-int max_down = 0;
-int max_right = 0;
+    int x = ceil(log2(dims[0])+1);
+    int up, down;
 
-//coords = mesh.Get_coords(rank)
-int x = ceil(log2(dims[0])+1);
-int up, down;
-
-for(int i=1; i < x; i++){
-    MPI_Cart_shift(mesh , 0, pow(2,(i-1)), &up, &down);
-    int y = pow(2,i);
-    if (coords[0] % y != 0){
-        printf("Processore %d, invio a %d, e mi tolgo, (up) livello: %d\n\n", rank, up, i);
-        MPI_Send(&local_max , 1, MPI_INT , up , rank , mesh);
-        break;
-    }else{
-        int k = pow(2, i-1);
-        if(coords[0] + k < dims[0]){
-            //print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
-            MPI_Recv(&max_down, 1, MPI_INT, down, down, mesh, MPI_STATUS_IGNORE);
-            //max_down = mesh.recv(source = down, tag = down)     #   recive from any max_down
-            //printf(" I am processor ", rank, "il mio down e' ", mesh.Get_coords(down), " messaggio ricevuto.  livello: ", i) 
-            if(max_down > local_max){
-                local_max = max_down;
+    for(int i=1; i < x; i++){
+        MPI_Cart_shift(mesh , 0, pow(2,(i-1)), &up, &down);
+        int y = pow(2,i);
+        if (coords[0] % y != 0){
+            MPI_Send(&local_max , 1, MPI_INT , up , rank , mesh);
+            break;
+        }else{
+            int k = pow(2, i-1);
+            if(coords[0] + k < dims[0]){
+                MPI_Recv(&max_down, 1, MPI_INT, down, down, mesh, MPI_STATUS_IGNORE);
+                if(max_down > local_max){
+                    local_max = max_down;
+                }
             }
         }
     }
-}
 
-MPI_Barrier(mesh);
-int left, right;
-//printf("DIMS 1: %d\n\n", dims[1]);
-if(rank < dims[1]){
-    for(int liv = 1; liv < dims[1]; liv++){
-        //left, right = mesh.Shift(1, 2**(liv-1))
-        MPI_Cart_shift(mesh , 1, pow(2,(liv-1)), &left, &right);
-        int temp = pow(2,liv);
-        if(rank % temp != 0){
-            //mesh.send(local_max, dest = left, tag = rank) 
-            printf("Processore %d, invio a %d, e mi tolgo, livello: (left) %d\n\n", rank, left, liv);
-            MPI_Send(&local_max , 1, MPI_INT , left , rank , mesh);
-            //printf("Send %d, I'm rank: %d\n", local_max, rank); 
-            break;
-        }
-        else{
-            int p = pow(2,(liv-1));
-            if(rank + p < dims[1]){
-                //max_right = mesh.recv(source = right, tag = right)
-                MPI_Recv(&max_right, 1, MPI_INT, right, right, mesh, MPI_STATUS_IGNORE);
-                //printf("Rank: %d\n", rank); 
-                if(max_right > local_max){
-                    local_max = max_right;
-                }
-            }     
+    MPI_Barrier(mesh);
+    int left, right;
+    if(rank < dims[1]){
+        for(int liv = 1; liv < dims[1]; liv++){
+            //left, right = mesh.Shift(1, 2**(liv-1))
+            MPI_Cart_shift(mesh , 1, pow(2,(liv-1)), &left, &right);
+            int temp = pow(2,liv);
+            if(rank % temp != 0){
+                MPI_Send(&local_max , 1, MPI_INT , left , rank , mesh);
+                break;
+            }
+            else{
+                int p = pow(2,(liv-1));
+                if(rank + p < dims[1]){
+                    MPI_Recv(&max_right, 1, MPI_INT, right, right, mesh, MPI_STATUS_IGNORE);
+                    if(max_right > local_max){
+                        local_max = max_right;
+                    }
+                }     
+            }
         }
     }
+
+    end = MPI_Wtime();
+//#############     FINE CALCOLO TEMPO     ###############
+sum_time += end-start;
+printf("-");
 }
 
-double end = MPI_Wtime();
+mean_time = sum_time/NUMBER_OF_REPS;
 
 
 if(rank == 0){

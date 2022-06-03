@@ -17,7 +17,6 @@ int find_max(int* arr, int dim){
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
 
-// 2) topologia mesh: 
     MPI_Init(&argc , &argv);
     int size;
     MPI_Comm_size(MPI_COMM_WORLD , &size);  
@@ -78,7 +77,7 @@ for(int i =1; i<x1; i++){
     MPI_Cart_shift(torus, 0, pow(2,(i-1)), &up, &down);
     int y = pow(2,i);
     if ((coords[0]% y) != 0){
-        //printf("FASE UP-DOWN:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, up, i);
+        printf("FASE UP-DOWN:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, up, i);
         MPI_Send(&local_max , 1, MPI_INT , up , rank , torus);
         break;
     }else{
@@ -111,7 +110,7 @@ if(rank < dims[1]*dims[2]){
         MPI_Cart_shift(torus , 1, pow(2,(i-1)), &left, &right);
         int y = pow(2,i);
         if (coords[1] % y != 0){
-            //printf("FASE LEFT-RIGHT:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, left, i);
+            printf("FASE LEFT-RIGHT:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, left, i);
             MPI_Send(&local_max , 1, MPI_INT , left , rank , torus);
             break;
         }else{
@@ -135,7 +134,7 @@ if(rank < dims[2]){
         MPI_Cart_shift(torus , 2, pow(2,(liv-1)), &shallow, &deep);
         int temp = pow(2,liv);
         if(rank % temp != 0){
-            //printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
+            printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
             MPI_Send(&local_max , 1, MPI_INT , shallow, rank , torus);
             break;
         }
