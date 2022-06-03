@@ -27,6 +27,7 @@ int main(int argc, char **argv){
 
 double start, end, sum_time, mean_time;
 int local_max;
+
 for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 //#############     INIZIO CALCOLO TEMPO     ###############
     start = clock();
@@ -35,7 +36,7 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 }
 //#############     FINE CALCOLO TEMPO     ###############
 sum_time += end-start;
-printf("-");
+//printf("-");
 
 mean_time = sum_time;
     printf("\n%d",local_max);

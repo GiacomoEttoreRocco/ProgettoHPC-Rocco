@@ -96,7 +96,7 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     end = MPI_Wtime();
 //#############     FINE CALCOLO TEMPO     ###############
     sum_time += end-start;
-    printf("-");
+    //printf("-");
 }
 mean_time = sum_time/NUMBER_OF_REPS;
 

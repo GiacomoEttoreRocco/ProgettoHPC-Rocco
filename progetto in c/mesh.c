@@ -121,15 +121,16 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     end = MPI_Wtime();
 //#############     FINE CALCOLO TEMPO     ###############
 sum_time += end-start;
-printf("-");
+//printf("-");
 }
 
 mean_time = sum_time/NUMBER_OF_REPS;
 
 
 if(rank == 0){
-    printf("\n%d",local_max);
-    printf("\nMean time (%d reps.): %lf", NUMBER_OF_REPS, end-start);
+    //printf("\n%d",local_max);
+    //printf("\nMean time (%d reps.): %lf", NUMBER_OF_REPS, end-start);
+    printf("%lf\n", mean_time);
 }
     
 MPI_Finalize();
