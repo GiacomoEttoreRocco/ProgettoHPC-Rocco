@@ -102,8 +102,9 @@ mean_time = sum_time/NUMBER_OF_REPS;
 
 
     if(rank == 0){
-        printf("\n%d",local_max);
-        printf("\nTime: %lf", end-start);
+        //printf("\n%d",local_max);
+        //printf("\nTime: %lf", end-start);
+        printf("%lf\n", mean_time);
     }
     
     MPI_Finalize();

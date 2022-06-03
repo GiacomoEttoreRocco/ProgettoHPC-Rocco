@@ -158,8 +158,10 @@ printf("-");
 
 mean_time = sum_time/NUMBER_OF_REPS;
     if(rank == 0){
-        printf("\n%d",local_max);
-        printf("\nMean time: %lf", mean_time);
+        //printf("\n%d",local_max);
+        //printf("\nMean time: %lf", mean_time);
+        printf("%lf\n", mean_time);
+
     }
     
     MPI_Finalize();

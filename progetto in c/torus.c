@@ -152,8 +152,9 @@ if(rank < dims[2]){
 
 double end = MPI_Wtime();
     if(rank == 0){
-        printf("\n%d",local_max);
-        printf("\nTime: %lf", end-start);
+        //printf("\n%d",local_max);
+        //printf("\nTime: %lf", end-start);
+        printf("%lf\n", mean_time);
     }
     
     MPI_Finalize();
