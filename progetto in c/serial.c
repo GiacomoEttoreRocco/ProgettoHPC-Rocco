@@ -3,9 +3,6 @@
 #include<math.h>
 #include<time.h>
 
-const int NUMBER_OF_REPS = 10000;
-
-
 int find_max(int* arr, int dim){
     int max = arr[0];
     for(int i = 1; i < dim; i++){
@@ -19,6 +16,8 @@ int find_max(int* arr, int dim){
 int main(int argc, char **argv){
 
     int dim  = atoi(argv[1]);
+    int NUMBER_OF_REPS = atoi(argv[2]);
+
     int *numbers;
     numbers = (int*)malloc(sizeof(int)*dim);
 

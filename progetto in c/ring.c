@@ -4,8 +4,6 @@
 #include<mpi.h> 
 #include<time.h>
 
-const int NUMBER_OF_REPS = 1;
-
 int find_max(int* arr, int dim){
     int max = arr[0];
     for(int i = 1; i < dim; i++){
@@ -18,6 +16,7 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
+    int NUMBER_OF_REPS = atoi(argv[2]);
 
 // 1) topologia ring:
     MPI_Init(&argc , &argv);

@@ -3,8 +3,6 @@
 #include<math.h>
 #include<mpi.h> 
 #include<time.h>
-
-const int NUMBER_OF_REPS = 100;
  
 int find_max(int* arr, int dim){
     int max = arr[0];
@@ -18,6 +16,7 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
+    int NUMBER_OF_REPS = atoi(argv[2]);
 
     MPI_Init(&argc , &argv);
     int size;
