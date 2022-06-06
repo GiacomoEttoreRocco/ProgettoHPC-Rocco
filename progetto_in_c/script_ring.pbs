@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#PBS -N ring_10M
+#PBS -q dssc_gpu
+#PBS -l mem=1000mb 
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=10:60:00
+cd $PBS_O_WORKDIR
+module load openmpi/4.1.2
+for i in {2..24}
+do
+	mpirun -np $i ./ring 10000000 1000 >> 10M_ring.csv
+done
+exit	
