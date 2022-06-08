@@ -16,7 +16,7 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
-    int NUMBER_OF_REPS = atoi(argv[2]);
+    double NUMBER_OF_REPS = atoi(argv[2]);
 // 2) topologia mesh: 
     MPI_Init(&argc , &argv);
     int size;
@@ -37,20 +37,18 @@ int *numbers;
 if(rank == 0){
     numbers = (int*)malloc(sizeof(int)*dim);
     for(int i = 0; i<dim; i++){
-        //numbers[i] = drand48()*dim;
         numbers[i] = i;
     }
 }
 
 int local_max;
-double start, end, sum_time, mean_time;
+double start, end, mean_time;
 int max_down;
 int max_right;
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-//#############     INIZIO CALCOLO TEMPO     ###############
-    start = MPI_Wtime();
+start = MPI_Wtime();
 
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     int *local_numbers; //= (int*)malloc(sizeof(int)*dim/size);
 
     int remainder = dim % size;
@@ -68,11 +66,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
-
-    //for(int i = 0; i < size_local[rank]; i++){
-    //    printf("%d , ",local_numbers[i]);
-    //}
-
     local_max = find_max(local_numbers, size_local[rank]);
 
     int x = ceil(log2(dims[0])+1);
@@ -99,7 +92,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     int left, right;
     if(rank < dims[1]){
         for(int liv = 1; liv < dims[1]; liv++){
-            //left, right = mesh.Shift(1, 2**(liv-1))
             MPI_Cart_shift(mesh , 1, pow(2,(liv-1)), &left, &right);
             int temp = pow(2,liv);
             if(rank % temp != 0){
@@ -119,17 +111,12 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     }
 
     end = MPI_Wtime();
-//#############     FINE CALCOLO TEMPO     ###############
-sum_time += end-start;
-//printf("-");
 }
 
-mean_time = sum_time/NUMBER_OF_REPS;
+mean_time = (end-start)/NUMBER_OF_REPS;
 
 
 if(rank == 0){
-    //printf("\n%d",local_max);
-    //printf("\nMean time (%d reps.): %lf", NUMBER_OF_REPS, end-start);
     printf("%d: %lf \n", size, mean_time);
 }
     

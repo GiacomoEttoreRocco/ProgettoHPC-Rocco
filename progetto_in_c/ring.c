@@ -16,7 +16,7 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim = atoi(argv[1]);
-    int NUMBER_OF_REPS = atoi(argv[2]);
+    double NUMBER_OF_REPS = atoi(argv[2]);
 
 // 1) topologia ring:
     MPI_Init(&argc , &argv);
@@ -45,17 +45,13 @@ int main(int argc, char **argv){
     }
 
 int local_max;
-double start, end, sum_time, mean_time;
+double start, end, mean_time;
 int max_right;
 
-//t0 = time.time()
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-//#############     INIZIO CALCOLO TEMPO     ###############
-    start = MPI_Wtime();
+start = MPI_Wtime();
 
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
-    // Compute displacement in case of n%size != 0
-    //  ->  We're spreading the remainder to all processors until the remainder is gone
     int remainder = dim % size;
     int size_local[size], displ[size];
     int sum = 0;
@@ -70,9 +66,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     }
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
-    //max_right;
-    // all the odd numbers send to the left and right neighborhood
-
     int x = ceil(log2(size)+1);
     int left, right;
     for(int i =1; i<x; i++){
@@ -86,7 +79,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
             if(rank + k < size){
                 MPI_Recv(&max_right, 1, MPI_INT, right, right, ring, MPI_STATUS_IGNORE);
                 if (max_right > local_max){
-                    //printf("%d", local_max);
                     local_max = max_right;
                     }
                 }
@@ -94,16 +86,11 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     }
     
     end = MPI_Wtime();
-//#############     FINE CALCOLO TEMPO     ###############
-    sum_time += end-start;
-    //printf("-");
 }
-mean_time = sum_time/NUMBER_OF_REPS;
+mean_time = (end-start)/NUMBER_OF_REPS;
 
 
     if(rank == 0){
-        //printf("\n%d",local_max);
-        //printf("\nTime: %lf", end-start);
         printf("%d: %lf\n", size, mean_time);
     }
     

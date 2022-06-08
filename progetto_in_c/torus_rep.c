@@ -16,7 +16,7 @@ int find_max(int* arr, int dim){
 
 int main(int argc, char **argv){
     int dim  = atoi(argv[1]);
-    int NUMBER_OF_REPS = atoi(argv[2]);
+    double NUMBER_OF_REPS = atoi(argv[2]);
 
     MPI_Init(&argc , &argv);
     int size;
@@ -30,22 +30,22 @@ int main(int argc, char **argv){
     MPI_Comm_rank(torus, &rank);  
     int coords[3];
     MPI_Cart_coords(torus, rank , 3, coords); 
-    //printf("\nIn torus topology, Processor %d has coordinates %d,%d,%d", rank, coords[0], coords[1], coords[2]);
 
 int* numbers;
 
 if(rank == 0){
     numbers = (int*)malloc(sizeof(int)*dim);
     for(int i = 0; i< dim; i++){
-        numbers[i] = i; //drand48()*dim;
+        numbers[i] = i; 
     }
 }
 int local_max;
-double start, end, sum_time, mean_time;
-//t0 = time.time()
+double start, end, mean_time;
+
+start = MPI_Wtime();
+
 for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-//#############     INIZIO CALCOLO TEMPO     ###############
-                    start = MPI_Wtime();
+
 
                     int *local_numbers; // = (int*)malloc(sizeof(int)*);
                     int remainder = dim % size;
@@ -66,31 +66,20 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                     MPI_Scatterv(numbers, size_local, displ, MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, torus);
 
                     local_max = find_max(local_numbers, size_local[rank]);
-
-                    //for(int i = 0; i< size_local[rank]; i++){
-                    //    printf("%d", local_numbers[i]);
-                    //}
-
-                    //printf("Processore %d, (%d,%d,%d) \n", rank, coords[0], coords[1], coords[2]);
-
                     int up, down, max_down;
 
                     int x1 = ceil(log2(dims[0])+1);
 
-                    for(int i =1; i<x1; i++){
+                    for(int i=1; i<x1; i++){
                         MPI_Cart_shift(torus, 0, pow(2,(i-1)), &up, &down);
                         int y = pow(2,i);
                         if ((coords[0]% y) != 0){
-                            //printf("FASE UP-DOWN:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, up, i);
                             MPI_Send(&local_max , 1, MPI_INT , up , rank , torus);
                             break;
                         }else{
                             int k = pow(2, i-1);
                             if((coords[0] + k) < dims[0]){
-                                //print("Processore ", rank," riceverei da right: ", right, " il mio left: ", left, ", livello: ", i)
-                                //max_right = ring.recv(source = right, tag = right)     #   recive from any max_right
                                 MPI_Recv(&max_down, 1, MPI_INT, down, down, torus, MPI_STATUS_IGNORE);
-                                //printf("Processore %d, ricevuto %d", rank, max_down);
                                 if (max_down > local_max){
                                     local_max = max_down;
                                     }
@@ -99,7 +88,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                     }
 
                     MPI_Barrier(torus);
-                    //----------------------------------------------------
 
                     int x = ceil(log2(dims[1])+1);
 
@@ -110,7 +98,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                             MPI_Cart_shift(torus , 1, pow(2,(i-1)), &left, &right);
                             int y = pow(2,i);
                             if (coords[1] % y != 0){
-                                //printf("FASE LEFT-RIGHT:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, left, i);
                                 MPI_Send(&local_max , 1, MPI_INT , left , rank , torus);
                                 break;
                             }else{
@@ -134,7 +121,6 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                             MPI_Cart_shift(torus , 2, pow(2,(liv-1)), &shallow, &deep);
                             int temp = pow(2,liv);
                             if(rank % temp != 0){
-                                //printf("FASE SHALLOW-DEEP:  Processore %d, invio %d a %d, e mi tolgo, livello: %d\n", rank, local_max, shallow, deep);
                                 MPI_Send(&local_max , 1, MPI_INT , shallow, rank , torus);
                                 break;
                             }
@@ -151,15 +137,11 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                     }
 
                     end = MPI_Wtime();
-//#############     FINE CALCOLO TEMPO     ###############
-sum_time += end-start;
-//printf("-");
 }
 
-mean_time = sum_time/NUMBER_OF_REPS;
+mean_time = (end-start)/NUMBER_OF_REPS;
     if(rank == 0){
-        //printf("\n%d",local_max);
-        //printf("\nMean time: %lf", mean_time);
+
         printf("%d: %lf\n",size, mean_time);
     }
     MPI_Finalize();
