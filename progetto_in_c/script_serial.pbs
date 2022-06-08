@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#PBS -N serial
+#PBS -q dssc_gpu
+#PBS -l mem=10gb 
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=10:60:00
+cd $PBS_O_WORKDIR
+module load gnu
+./serial 10000 5000 >> serial.csv
+./serial 100000 5000 >> serial.csv
+./serial 1000000 5000 >> serial.csv
+./serial 10000000 5000 >> serial.csv
+./serial 100000000 5000 >> serial.csv
+exit	
