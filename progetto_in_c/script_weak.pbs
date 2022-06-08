@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#PBS -N strongscalability_job
+#PBS -q dssc_gpu
+#PBS -l mem=10gb 
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=10:60:00
+cd $PBS_O_WORKDIR
+module load openmpi/4.1.2
+for i in {2..24}
+do
+	mpirun -np $i ./ring $((i*10000)) 1000 >> weak_ring.csv
+	mpirun -np $i ./mesh  $((i*10000)) 1000 >> weak_mesh.csv
+	mpirun -np $i ./torus_rep $((i*10000)) 1000 >> weak_torus.csv 
+done
+exit	
