@@ -49,12 +49,6 @@ double start, end, mean_time;
 int max_right;
 int left, right;
 
-
-int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
-
-
-start = MPI_Wtime();
-
 int remainder = dim % size;
     int size_local[size], displ[size];
     int sum = 0;
@@ -67,6 +61,10 @@ int remainder = dim % size;
         displ[i] = sum;
         sum += size_local[i];
     }
+
+int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
+
+start = MPI_Wtime();
 
 for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);

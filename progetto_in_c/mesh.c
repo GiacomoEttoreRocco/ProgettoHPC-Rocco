@@ -46,11 +46,6 @@ int max_down;
 int max_right;
 int up, down;
 
-
-int *local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
-
-start = MPI_Wtime();
-
     int remainder = dim % size;
         int size_local[size], displ[size];
         int sum = 0;
@@ -63,6 +58,11 @@ start = MPI_Wtime();
             displ[i] = sum;
             sum += size_local[i];
         }
+
+int *local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
+
+start = MPI_Wtime();
+
 
 for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
