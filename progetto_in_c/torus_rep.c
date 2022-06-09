@@ -56,9 +56,9 @@ for (int i = 0; i < size; i++) {
 int *local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 int up, down, max_down;
 
-start = MPI_Wtime();
+//start = MPI_Wtime();
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                   
                     MPI_Scatterv(numbers, size_local, displ, MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, torus);
 
@@ -66,6 +66,9 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
                     int x1 = ceil(log2(dims[0])+1);
 
+start = MPI_Wtime();
+
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                     for(int i=1; i<x1; i++){
                         MPI_Cart_shift(torus, 0, pow(2,(i-1)), &up, &down);
                         int y = pow(2,i);

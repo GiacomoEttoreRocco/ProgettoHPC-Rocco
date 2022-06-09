@@ -61,16 +61,19 @@ int up, down;
 
 int *local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 
-start = MPI_Wtime();
+//start = MPI_Wtime();
 
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
-    local_max = find_max(local_numbers, size_local[rank]);
+    local_max = find_max(local_numbers, size_local[rank]);  //esecuzione
 
     int x = ceil(log2(dims[0])+1);
 
+start = MPI_Wtime();
+
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     for(int i=1; i < x; i++){
         MPI_Cart_shift(mesh , 0, pow(2,(i-1)), &up, &down);
         int y = pow(2,i);

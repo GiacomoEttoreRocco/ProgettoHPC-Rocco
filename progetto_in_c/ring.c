@@ -31,9 +31,6 @@ int main(int argc, char **argv){
     MPI_Comm_rank(ring, &rank);     
     int coords[1];
     MPI_Cart_coords(ring, rank , 1, coords); 
-    //printf("\nIn ring topology, Processor %d has coordinates %d", rank, coords[0]);
-
-    // left, right = ring.Shift(0, 1)
 
     int* numbers; 
 
@@ -64,12 +61,16 @@ int remainder = dim % size;
 
 int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
 
-start = MPI_Wtime();
+//start = MPI_Wtime();
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
     int x = ceil(log2(size)+1);
+
+start = MPI_Wtime();
+
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     for(int i =1; i<x; i++){
         MPI_Cart_shift(ring, 0, pow(2,(i-1)), &left, &right);
         int y = pow(2,i);
