@@ -41,32 +41,29 @@ if(rank == 0){
 }
 int local_max;
 double start, end, mean_time;
+int *local_numbers = (int*)malloc(sizeof(int)*);
+int up, down, max_down;
 
 start = MPI_Wtime();
 
+int remainder = dim % size;
+int size_local[size], displ[size];
+int sum = 0;
+for (int i = 0; i < size; i++) {
+    size_local[i] = dim / size;
+    if (remainder > 0) {
+        size_local[i]++;
+        remainder--;
+    }
+    displ[i] = sum;
+    sum += size_local[i];
+}
+
 for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-
-
-                    int *local_numbers; // = (int*)malloc(sizeof(int)*);
-                    int remainder = dim % size;
-                        int size_local[size], displ[size];
-                        int sum = 0;
-                        for (int i = 0; i < size; i++) {
-                            size_local[i] = dim / size;
-                            if (remainder > 0) {
-                                size_local[i]++;
-                                remainder--;
-                            }
-                            displ[i] = sum;
-                            sum += size_local[i];
-                        }
-
-                    local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
-
+                  
                     MPI_Scatterv(numbers, size_local, displ, MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, torus);
 
                     local_max = find_max(local_numbers, size_local[rank]);
-                    int up, down, max_down;
 
                     int x1 = ceil(log2(dims[0])+1);
 

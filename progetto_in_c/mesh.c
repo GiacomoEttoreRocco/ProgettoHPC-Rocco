@@ -30,7 +30,6 @@ int main(int argc, char **argv){
     MPI_Comm_rank(mesh, &rank);  
     int coords[2];
     MPI_Cart_coords(mesh, rank , 2, coords); 
-    //printf("\nIn mesh topology, Processor %d has coordinates %d,%d", rank, coords[0], coords[1]);
 
 int *numbers;
 
@@ -45,11 +44,12 @@ int local_max;
 double start, end, mean_time;
 int max_down;
 int max_right;
+int up, down;
+
+
+int *local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
 
 start = MPI_Wtime();
-
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-    int *local_numbers; //= (int*)malloc(sizeof(int)*dim/size);
 
     int remainder = dim % size;
         int size_local[size], displ[size];
@@ -63,13 +63,13 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
             displ[i] = sum;
             sum += size_local[i];
         }
-    local_numbers = (int*)malloc(sizeof(int)*size_local[rank]);
+
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, mesh);
     local_max = find_max(local_numbers, size_local[rank]);
 
     int x = ceil(log2(dims[0])+1);
-    int up, down;
 
     for(int i=1; i < x; i++){
         MPI_Cart_shift(mesh , 0, pow(2,(i-1)), &up, &down);

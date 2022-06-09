@@ -47,12 +47,15 @@ int main(int argc, char **argv){
 int local_max;
 double start, end, mean_time;
 int max_right;
+int left, right;
+
+
+int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
+
 
 start = MPI_Wtime();
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
-    int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
-    int remainder = dim % size;
+int remainder = dim % size;
     int size_local[size], displ[size];
     int sum = 0;
     for (int i = 0; i < size; i++) {
@@ -64,10 +67,11 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
         displ[i] = sum;
         sum += size_local[i];
     }
+
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
     int x = ceil(log2(size)+1);
-    int left, right;
     for(int i =1; i<x; i++){
         MPI_Cart_shift(ring, 0, pow(2,(i-1)), &left, &right);
         int y = pow(2,i);

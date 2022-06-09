@@ -37,6 +37,7 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     local_max = find_max(numbers, dim);
     numbers[0] = NUMBER_OF_REPS;
 }
+
 end = clock();
 
 mean_time = ((double)(end-start))/(NUMBER_OF_REPS);
