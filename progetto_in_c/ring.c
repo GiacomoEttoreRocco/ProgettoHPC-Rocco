@@ -92,7 +92,7 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 }
 end = MPI_Wtime();
 //mean_time = (end-start)/NUMBER_OF_REPS;
-mean_time = (end-start);
+mean_time = (end-start)/(NUMBER_OF_REPS/1000);
 
     if(rank == 0){
         printf("%d: %lf\n", size, mean_time);
