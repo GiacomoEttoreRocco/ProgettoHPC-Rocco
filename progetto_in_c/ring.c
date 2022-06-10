@@ -18,7 +18,6 @@ int main(int argc, char **argv){
     int dim = atoi(argv[1]);
     double NUMBER_OF_REPS = atoi(argv[2]);
 
-// 1) topologia ring:
     MPI_Init(&argc , &argv);
     int size;
     MPI_Comm_size(MPI_COMM_WORLD , &size);  
@@ -61,16 +60,16 @@ int remainder = dim % size;
 
 int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
 
-//start = MPI_Wtime();
-//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+start = MPI_Wtime();
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
     int x = ceil(log2(size)+1);
 
-start = MPI_Wtime();
+//start = MPI_Wtime();
 
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     for(int i =1; i<x; i++){
         MPI_Cart_shift(ring, 0, pow(2,(i-1)), &left, &right);
         int y = pow(2,i);
@@ -91,8 +90,8 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     //end = MPI_Wtime();
 }
 end = MPI_Wtime();
-//mean_time = (end-start)/NUMBER_OF_REPS;
-mean_time = (end-start)/(NUMBER_OF_REPS/1000);
+mean_time = (end-start)/NUMBER_OF_REPS;
+//mean_time = (end-start)/(NUMBER_OF_REPS/1000);
 
     if(rank == 0){
         printf("%d: %lf\n", size, mean_time);

@@ -9,8 +9,8 @@ cd $PBS_O_WORKDIR
 module load openmpi/4.1.2
 for i in {2..24}
 do
-	mpirun -np $i ./ring 100000 1000000 >> comm_ring.csv
-	mpirun -np $i ./mesh 100000 1000000 >> comm_mesh.csv
-	mpirun -np $i ./torus_rep 100000 1000000 >> comm_torus_rep.csv 
+	mpirun -np $i ./ring 10000 10000 >> 10k_ring.csv
+	mpirun -np $i ./mesh 10000 10000 >> 10k_mesh.csv
+	mpirun -np $i ./torus_rep 10000 10000 >> 10k_torus_rep.csv 
 done
 exit	
