@@ -135,10 +135,13 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                         }
                     }
 
-                    end = MPI_Wtime();
+                    //end = MPI_Wtime();
 }
 
-mean_time = (end-start)/NUMBER_OF_REPS;
+end = MPI_Wtime();
+//mean_time = (end-start)/NUMBER_OF_REPS;
+mean_time = (end-start);
+
     if(rank == 0){
 
         printf("%d: %lf\n",size, mean_time);
