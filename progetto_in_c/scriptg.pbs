@@ -9,6 +9,6 @@ cd $PBS_O_WORKDIR
 module load openmpi/4.1.2
 for i in {2..24}
 do
-	mpirun -np $i ./ring_gather 10000 10000 >> 10k_gather.csv 
+	mpirun -np $i ./ring_gather 100000000 1000 >> 100M_gather.csv 
 done
 exit	
