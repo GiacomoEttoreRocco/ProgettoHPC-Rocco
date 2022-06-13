@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PBS -N communication
+#PBS -q dssc_gpu
+#PBS -l mem=10gb 
+#PBS -l nodes=1:ppn=24
+#PBS -l walltime=10:60:00
+cd $PBS_O_WORKDIR
+module load openmpi/4.1.2
+for i in {2..24}
+do
+	mpirun -np $i ./ring_gather 10000 1000000 >> comm_gather.csv
+	mpirun -np $i ./ring 10000 1000000 >> comm_ring.csv
+	mpirun -np $i ./mesh 10000 1000000 >> comm_mesh.csv	
+        mpirun -np $i ./torus_rep 10000 1000000 >> comm_torus_rep.csv
+done
+exit	

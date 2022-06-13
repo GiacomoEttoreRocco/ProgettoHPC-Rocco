@@ -64,12 +64,15 @@ for (int i = 0; i < size; i++) {
 int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
 int max;
 
-start = MPI_Wtime();
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//start = MPI_Wtime();
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
     //printf("rank %d max: %d\n", rank, local_max);
+
+start = MPI_Wtime();
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     MPI_Gather(&local_max, 1, MPI_INT, all_maxs, 1, MPI_INT, 0, ring);
 
     if(rank == 0){
@@ -81,11 +84,11 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     }
 
 end = MPI_Wtime();
-mean_time = (end-start)/NUMBER_OF_REPS;
+//mean_time = (end-start)/NUMBER_OF_REPS;
 //mean_time = (end-start)/(NUMBER_OF_REPS/1000);
-
+mean_time = ((end-start)*1000)/NUMBER_OF_REPS;
     if(rank == 0){
-        printf("max: %d, %d: %lf\n", max, size, mean_time);
+        printf("%d: %lf in ms\n", size, mean_time);
     }
     
     MPI_Finalize();

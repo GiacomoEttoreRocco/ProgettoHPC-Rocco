@@ -60,16 +60,16 @@ int remainder = dim % size;
 
 int *local_numbers = (int*)malloc(sizeof(int)*dim/size);
 
-start = MPI_Wtime();
-for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+//start = MPI_Wtime();
+//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
 
     MPI_Scatterv(numbers, size_local, displ,  MPI_INT, local_numbers, size_local[rank], MPI_INT , 0, ring);
     local_max = find_max(local_numbers, dim/size);
     int x = ceil(log2(size)+1);
 
-//start = MPI_Wtime();
+start = MPI_Wtime();
 
-//for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
+for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
     for(int i =1; i<x; i++){
         MPI_Cart_shift(ring, 0, pow(2,(i-1)), &left, &right);
         int y = pow(2,i);
@@ -86,15 +86,14 @@ for(int rep = 0; rep < NUMBER_OF_REPS; rep++){
                 }
             }
     }
-    
-    //end = MPI_Wtime();
 }
+
 end = MPI_Wtime();
-mean_time = (end-start)/NUMBER_OF_REPS;
-//mean_time = (end-start)/(NUMBER_OF_REPS/1000);
+//mean_time = (end-start)/NUMBER_OF_REPS;
+mean_time = ((end-start)*1000)/NUMBER_OF_REPS;
 
     if(rank == 0){
-        printf("%d: %lf\n", size, mean_time);
+        printf("%d: %lf in ms\n", size, mean_time);
     }
     
     MPI_Finalize();
